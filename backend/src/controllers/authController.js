@@ -6,27 +6,31 @@ const { generateToken } = require('../utils/jwt');
 const login = async (req, res) => {
   try {
     const { id, password, role } = req.body;
-    
+
+    if (!id || !password || !role) {
+      return res.status(400).json({ error: 'Missing required fields: id, password, or role' });
+    }
+
     let user;
-    
+
     if (role === 'student' || role === 'parent') {
       user = await User.findOne({ where: { rollNo: id, role } });
     } else {
       user = await User.findOne({ where: { email: id, role } });
     }
-    
+
     if (!user) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
-    
+
     const isMatch = await user.comparePassword(password);
-    
+
     if (!isMatch) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
-    
+
     const token = generateToken(user.id, user.role);
-    
+
     res.json({
       token,
       user: {
@@ -45,17 +49,17 @@ const login = async (req, res) => {
 const verify = async (req, res) => {
   try {
     const { email, rollNo, password } = req.body;
-    
+
     const user = await User.findOne({ where: { email, rollNo } });
-    
+
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
-    
+
     user.password = password;
     user.isVerified = true;
     await user.save();
-    
+
     res.json({ message: 'Account verified successfully' });
   } catch (error) {
     res.status(500).json({ error: error.message });
