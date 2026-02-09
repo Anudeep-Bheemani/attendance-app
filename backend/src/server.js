@@ -14,6 +14,9 @@ const analyticsRoutes = require('./routes/analyticsRoutes');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Trust proxy for Render
+app.set('trust proxy', 1);
+
 // Middleware
 app.use(helmet());
 app.use(cors({
