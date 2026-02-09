@@ -48,12 +48,24 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Something went wrong!' });
 });
 
+// Auto-seed database on first run
+const autoSeed = async () => {
+  const User = require('./models/User');
+  const count = await User.count();
+  if (count === 0) {
+    console.log('🌱 Running auto-seed...');
+    const autoSeedDatabase = require('./config/autoSeed');
+    await autoSeedDatabase();
+  }
+};
+
 // Start server
 const startServer = async () => {
   try {
     await testConnection();
     await sequelize.sync({ alter: true });
     console.log('✅ Database synced');
+    await autoSeed();
     
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
